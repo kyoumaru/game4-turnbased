@@ -4,7 +4,7 @@ extends Node
 signal died(unit: Unit, killer: Unit)
 
 enum Action { BASIC, SKILL, ULT }
-enum Target { ENEMY, ALLY, SELF }
+enum Target { ENEMY, ALLY, SELF, ALL_ENEMIES, ALL_ALLIES }
 
 var unit_name := "Unit"
 var max_hp := 100
@@ -68,22 +68,25 @@ func can_use(action: Action) -> bool:
 	return true
 
 
-# ---------- Override these in Player / Enemy / character scripts ----------
+# ---------- Override these in character scripts ----------
+# Every action receives an ARRAY of targets:
+#   single target -> targets[0]
+#   AOE / all allies -> loop over targets
 
-# Who each action targets (battle manager uses this for target selection)
+# What each action targets (battle manager uses this for target selection)
 func get_target_type(_action: Action) -> Target:
 	return Target.ENEMY
 
 
-func basic_attack(target: Unit, _battle: Node) -> void:
-	target.take_damage(atk, self)
+func basic_attack(targets: Array, _battle: Node) -> void:
+	targets[0].take_damage(atk, self)
 
 
-func skill(_target: Unit, _battle: Node) -> void:
+func skill(_targets: Array, _battle: Node) -> void:
 	pass
 
 
-func ult(_target: Unit, _battle: Node) -> void:
+func ult(_targets: Array, _battle: Node) -> void:
 	pass
 
 
@@ -98,14 +101,14 @@ func take_turn(_battle: Node) -> void:
 
 
 # Used by battle manager. Handles energy spend/gain for you.
-func perform(action: Action, target: Unit, battle: Node) -> void:
+func perform(action: Action, targets: Array, battle: Node) -> void:
 	match action:
 		Action.BASIC:
-			basic_attack(target, battle)
+			basic_attack(targets, battle)
 			gain_energy(energy_on_basic)
 		Action.SKILL:
-			skill(target, battle)
+			skill(targets, battle)
 			gain_energy(energy_on_skill)
 		Action.ULT:
 			energy = 0
-			ult(target, battle)
+			ult(targets, battle)

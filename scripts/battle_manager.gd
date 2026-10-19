@@ -20,8 +20,8 @@ var pending_targets: Array[Unit] = []
 
 
 func _ready() -> void:
-	players = [_add(Player.new())]
-	enemies = [_add(Enemy.new())]
+	players = [_add(Seele.new()), _add(Huohuo.new())]
+	enemies = [_add(Enemy1.new()), _add(Enemy2.new())]
 	run_battle()
 
 
@@ -36,11 +36,6 @@ func _add(u: Unit) -> Unit:
 func advance_action(unit: Unit, percent: float) -> void:
 	unit.av = maxf(unit.av - unit.base_av() * percent, 0.0)
 	print("%s advanced %d%%" % [unit.unit_name, int(percent * 100)])
-
-
-func delay_action(unit: Unit, percent: float) -> void:
-	unit.av += unit.base_av() * percent
-
 
 # ---------- Helpers ----------
 func _alive(list: Array[Unit]) -> Array[Unit]:
@@ -65,9 +60,26 @@ func random_targets(actor: Unit, count: int) -> Array:
 	return pool.slice(0, mini(count, pool.size()))
 
 
+func _names(list: Array) -> String:
+	var out := PackedStringArray()
+	for u in list:
+		out.append(u.unit_name)
+	return ", ".join(out)
+
+
 func _on_unit_died(victim: Unit, killer: Unit) -> void:
+	print("*** %s is defeated ***" % victim.unit_name)
 	if killer != null:
 		killer.on_kill(victim, self)
+
+
+func _print_status() -> void:
+	print("-- Party --")
+	for u in _alive(players):
+		print("  %s  HP %d/%d  Energy %d/%d" % [u.unit_name, u.hp, u.max_hp, u.energy, u.max_energy])
+	print("-- Enemies --")
+	for u in _alive(enemies):
+		print("  %s  HP %d/%d" % [u.unit_name, u.hp, u.max_hp])
 
 
 # ---------- Main loop ----------
@@ -90,7 +102,7 @@ func run_battle() -> void:
 		actor.reset_av()
 
 		current_actor = actor
-		print("\n--- %s's turn --- (next: %s)" % [actor.unit_name, ", ".join(preview_order(5))])
+		print("\n=== %s's turn === (next: %s)" % [actor.unit_name, ", ".join(preview_order(6))])
 		if actor.is_player:
 			await player_turn(actor)
 		else:
@@ -119,22 +131,23 @@ func preview_order(count := 6) -> Array[String]:
 
 # ---------- Player input ----------
 func player_turn(actor: Unit) -> void:
-	_print_menu(actor)
+	_print_status()
+	print("[A] Basic  [S] Skill  [R] Ultimate%s" % ("" if actor.can_use(Unit.Action.ULT) else " (not ready)"))
 	state = State.CHOOSING_ACTION
 	await action_done
 	state = State.BUSY
 
 
-func _print_menu(actor: Unit) -> void:
-	print("HP %d/%d | Energy %d/%d" % [actor.hp, actor.max_hp, actor.energy, actor.max_energy])
-	print("[A] Basic  [S] Skill  [R] Ultimate%s" % ("" if actor.can_use(Unit.Action.ULT) else " (not ready)"))
-
-
 func _valid_targets(actor: Unit, action: Unit.Action) -> Array[Unit]:
 	match actor.get_target_type(action):
-		Unit.Target.ENEMY: return opponents_of(actor)
-		Unit.Target.ALLY: return allies_of(actor)
+		Unit.Target.ENEMY, Unit.Target.ALL_ENEMIES: return opponents_of(actor)
+		Unit.Target.ALLY, Unit.Target.ALL_ALLIES: return allies_of(actor)
 		_: return [actor] as Array[Unit]
+
+
+func _is_multi_target(actor: Unit, action: Unit.Action) -> bool:
+	var t := actor.get_target_type(action)
+	return t == Unit.Target.ALL_ENEMIES or t == Unit.Target.ALL_ALLIES
 
 
 func _select_action(action: Unit.Action) -> void:
@@ -142,20 +155,25 @@ func _select_action(action: Unit.Action) -> void:
 		print("Not enough energy! (%d/%d)" % [current_actor.energy, current_actor.max_energy])
 		return
 	var targets := _valid_targets(current_actor, action)
+	# AOE / all-allies, or only one choice: no target selection needed
+	if _is_multi_target(current_actor, action):
+		_execute(action, targets)
+		return
 	if targets.size() == 1:
-		_execute(action, targets[0])
+		_execute(action, targets)
 		return
 	pending_action = action
 	pending_targets = targets
 	state = State.CHOOSING_TARGET
+	print("Choose target:")
 	for i in targets.size():
 		print("  %d) %s (%d HP)" % [i + 1, targets[i].unit_name, targets[i].hp])
 
 
-func _execute(action: Unit.Action, target: Unit) -> void:
+func _execute(action: Unit.Action, targets: Array) -> void:
 	state = State.BUSY
-	print("%s -> %s" % [current_actor.unit_name, target.unit_name])
-	current_actor.perform(action, target, self)
+	print("%s -> %s" % [current_actor.unit_name, _names(targets)])
+	current_actor.perform(action, targets, self)
 	action_done.emit()
 
 
@@ -169,4 +187,4 @@ func _unhandled_input(event: InputEvent) -> void:
 		State.CHOOSING_TARGET:
 			var idx: int = event.keycode - KEY_1
 			if idx >= 0 and idx < pending_targets.size():
-				_execute(pending_action, pending_targets[idx])
+				_execute(pending_action, [pending_targets[idx]])
