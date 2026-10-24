@@ -1,32 +1,37 @@
 class_name Seele
 extends Player
 
-# Player 1 (SEELE): pure damage dealer (single target)
+# Damage dealer. Basic < Skill < Ult, all single target.
+# Passive: killing an enemy gives her 100% action advance.
 
 func _init() -> void:
+	super()
 	unit_name = "Seele"
 	max_hp = 120
 	atk = 25
-	speed = 110
+	speed = 90
+	crit_rate = 0.6   # change per character if you want
+	crit_dmg = 0.5
 
 
 func get_target_type(_action: Action) -> Target:
-	return Target.ENEMY   # basic, skill and ult all hit one enemy
+	return Target.ENEMY
 
 
-# [A] Basic: 100% ATK
-func basic_attack(targets: Array, _battle: Node) -> void:
-	print("%s uses Basic Attack" % unit_name)
-	targets[0].take_damage(atk, self)
+# [A] Basic: uses the default (100% ATK) from unit.gd
 
 
-# [S] Skill: 180% ATK
+# [S] Skill: 200% ATK
 func skill(targets: Array, _battle: Node) -> void:
-	print("%s uses Skill" % unit_name)
-	targets[0].take_damage(int(atk * 1.8), self)
+	deal_damage(targets[0], 2.0)
 
 
-# [R] Ultimate: 350% ATK
+# [R] Ultimate: 450% ATK
 func ult(targets: Array, _battle: Node) -> void:
-	print("%s uses ULTIMATE!" % unit_name)
-	targets[0].take_damage(int(atk * 3.5), self)
+	deal_damage(targets[0], 4.5)
+
+
+# Passive: 100% action advance on kill (she acts again right away)
+func on_kill(_victim: Unit, battle: Node) -> void:
+	print("%s's passive triggers!" % unit_name)
+	battle.advance_action(self, 1.0)

@@ -1,13 +1,20 @@
 class_name Huohuo
 extends Player
 
-# Player 2 (HUOHUO): support healer
+# Healer. Skill heals 3 allies (the 3 lowest HP%). Ult heals everyone + gives energy.
+
+var skill_heal_count := 3
+const SKILL_HEAL := 2.5     # x ATK
+const ULT_HEAL := 3.0       # x ATK
+const ULT_ENERGY := 30
+
 
 func _init() -> void:
+	super()
 	unit_name = "Huohuo"
-	max_hp = 100
-	atk = 20
-	speed = 100
+	max_hp = 140
+	atk = 15
+	speed = 110
 
 
 func get_target_type(action: Action) -> Target:
@@ -16,23 +23,20 @@ func get_target_type(action: Action) -> Target:
 		_: return Target.ENEMY
 
 
-# [A] Basic: weak attack, 80% ATK
-func basic_attack(targets: Array, _battle: Node) -> void:
-	print("%s uses Basic Attack" % unit_name)
-	targets[0].take_damage(int(atk * 0.8), self)
+# [A] Basic: default (100% ATK, single target)
 
 
-# [S] Skill: heal ALL allies for 150% ATK
+# [S] Skill: heal the 3 lowest-HP% allies
 func skill(targets: Array, _battle: Node) -> void:
-	print("%s uses Skill: Group Heal" % unit_name)
-	for t in targets:
-		t.heal(int(atk * 1.5))
+	var pool: Array = targets.duplicate()
+	pool.sort_custom(func(a, b): return float(a.hp) / a.max_hp < float(b.hp) / b.max_hp)
+	for i in mini(skill_heal_count, pool.size()):
+		pool[i].heal(int(atk * SKILL_HEAL))
 
 
-# [R] Ultimate: heal ALL allies for 250% ATK and give them 40 energy
+# [R] Ultimate: heal ALL allies + give them energy
 func ult(targets: Array, _battle: Node) -> void:
-	print("%s uses ULTIMATE: Overheal!" % unit_name)
 	for t in targets:
-		t.heal(int(atk * 2.5))
-		t.gain_energy(40)
-		print("%s gains 40 energy (%d/%d)" % [t.unit_name, t.energy, t.max_energy])
+		t.heal(int(atk * ULT_HEAL))
+		t.gain_energy(ULT_ENERGY)
+		print("%s gains %d energy (%d/%d)" % [t.unit_name, ULT_ENERGY, t.energy, t.max_energy])
