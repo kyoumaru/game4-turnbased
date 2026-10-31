@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://c05sk044p45kn"]
+
+[ext_resource type="Script" uid="uid://cn03p83w64qyp" path="res://scripts/battle_manager.gd" id="1_dn72j"]
+[ext_resource type="Texture2D" uid="uid://d2u2er4o0hh4f" path="res://assets/battleback1_0.png" id="2_th188"]
+
+[node name="Node" type="Node" unique_id=915763739]
+script = ExtResource("1_dn72j")
+
+[node name="Background" type="TextureRect" parent="." unique_id=193508680]
+offset_right = 1151.0
+offset_bottom = 637.0
+texture = ExtResource("2_th188")
+
+[node name="Positions" type="Node2D" parent="." unique_id=420035574]
+
+[node name="Seele" type="Marker2D" parent="Positions" unique_id=895386947]
+position = Vector2(240, 482)
+
+[node name="Himeko" type="Marker2D" parent="Positions" unique_id=855376785]
+position = Vector2(344, 345)
+
+[node name="Sparkle" type="Marker2D" parent="Positions" unique_id=327653644]
+position = Vector2(215, 247)
+
+[node name="Haohao" type="Marker2D" parent="Positions" unique_id=1152107208]
+position = Vector2(99, 359)
+
+[node name="Enemy1" type="Marker2D" parent="Positions" unique_id=2111704405]
+position = Vector2(946, 346)
+
+[node name="Enemy2" type="Marker2D" parent="Positions" unique_id=1408476600]
+position = Vector2(771, 250)
+
+[node name="Enemy3" type="Marker2D" parent="Positions" unique_id=1524662364]
+position = Vector2(775, 485)
