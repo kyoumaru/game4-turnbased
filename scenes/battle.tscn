@@ -14,16 +14,16 @@ texture = ExtResource("2_th188")
 [node name="Positions" type="Node2D" parent="." unique_id=420035574]
 
 [node name="Seele" type="Marker2D" parent="Positions" unique_id=895386947]
-position = Vector2(240, 482)
+position = Vector2(339, 485)
 
 [node name="Himeko" type="Marker2D" parent="Positions" unique_id=855376785]
-position = Vector2(344, 345)
+position = Vector2(443, 348)
 
 [node name="Sparkle" type="Marker2D" parent="Positions" unique_id=327653644]
-position = Vector2(215, 247)
+position = Vector2(314, 250)
 
 [node name="Haohao" type="Marker2D" parent="Positions" unique_id=1152107208]
-position = Vector2(99, 359)
+position = Vector2(198, 362)
 
 [node name="Enemy1" type="Marker2D" parent="Positions" unique_id=2111704405]
 position = Vector2(946, 346)

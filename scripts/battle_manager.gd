@@ -8,6 +8,7 @@ enum State { BUSY, CHOOSING_ACTION, CHOOSING_TARGET }
 const UNIT_VIEW_SCENE = preload("res://scenes/unit.tscn")
 
 const SEELE_FRAMES = preload("res://assets/sprite_animations/seele.tres")
+const HUOHUO_FRAMES = preload("res://assets/sprite_animations/huohuo.tres")
 
 
 const MAX_SP := 7
@@ -94,8 +95,8 @@ func _add(unit_instance: Unit) -> Unit:
 		
 		if unit_instance is Seele:
 			frames = SEELE_FRAMES
-		#elif unit_instance is Huohuo:
-			#frames = HUOHUO_FRAMES
+		elif unit_instance is Huohuo:
+			frames = HUOHUO_FRAMES
 			
 		if slot < player_spawns.size() and player_spawns[slot]:
 			u.global_position = player_spawns[slot].global_position
