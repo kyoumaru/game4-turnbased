@@ -9,7 +9,8 @@ const UNIT_VIEW_SCENE = preload("res://scenes/unit.tscn")
 
 const SEELE_FRAMES = preload("res://assets/sprite_animations/seele.tres")
 const HUOHUO_FRAMES = preload("res://assets/sprite_animations/huohuo.tres")
-
+const HIMEKO_FRAMES = preload("res://assets/sprite_animations/himeko.tres")
+const SPARKLE_FRAMES = preload("res://assets/sprite_animations/sparkle.tres")
 
 const MAX_SP := 7
 const START_SP := 3
@@ -97,6 +98,10 @@ func _add(unit_instance: Unit) -> Unit:
 			frames = SEELE_FRAMES
 		elif unit_instance is Huohuo:
 			frames = HUOHUO_FRAMES
+		elif unit_instance is Sparkle:
+			frames = SPARKLE_FRAMES
+		elif unit_instance is Himeko:
+			frames = HIMEKO_FRAMES
 			
 		if slot < player_spawns.size() and player_spawns[slot]:
 			u.global_position = player_spawns[slot].global_position
