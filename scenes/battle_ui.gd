@@ -5,13 +5,14 @@ extends Control
 
 @onready var action_bar_container: HBoxContainer = $VBoxContainer/ActionBar
 @onready var sp_label: Label = $VBoxContainer/SPLabel
+@onready var display_label: Label = $VBoxContainer/DisplayLabel
 @onready var command_panel: Control = $CommandPanel
 @onready var btn_basic: Button = $CommandPanel/BtnBasic
 @onready var btn_skill: Button = $CommandPanel/BtnSkill
 @onready var btn_ult: Button = $CommandPanel/BtnUlt
 
 func _ready() -> void:
-	# If battle_manager isn't exported, try finding it in the parent/root scene
+	# If battle_manager isn't exported, try finding it in the parent/root scene	
 	if not battle_manager:
 		battle_manager = get_node_or_null("../BattleManager") # Adjust path if needed
 		
@@ -26,12 +27,19 @@ func _ready() -> void:
 	
 	command_panel.hide()
 
+func _on_action_logged(text: String) -> void:
+	if display_label:
+		display_label.text = text
+
 func _process(_delta: float) -> void:
 	if not battle_manager:
 		return
 	
 	# Update SP label 
 	sp_label.text = "SP: %d / %d" % [battle_manager.sp, battle_manager.MAX_SP]
+	
+	# Update Display label
+	# display_label.text
 	
 	# Show command menu only when it's a player's turn to choose an action
 	if battle_manager.state == battle_manager.State.CHOOSING_ACTION and battle_manager.current_actor and battle_manager.current_actor.is_player:

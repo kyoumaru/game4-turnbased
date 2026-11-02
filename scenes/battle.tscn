@@ -26,14 +26,28 @@ position = Vector2(314, 250)
 [node name="Haohao" type="Marker2D" parent="Positions" unique_id=1152107208]
 position = Vector2(198, 362)
 
-[node name="Enemy1" type="Marker2D" parent="Positions" unique_id=2111704405]
-position = Vector2(946, 346)
-
-[node name="Enemy2" type="Marker2D" parent="Positions" unique_id=1408476600]
+[node name="Enemy1" type="Marker2D" parent="Positions" unique_id=1408476600]
 position = Vector2(771, 250)
+
+[node name="Enemy2" type="Marker2D" parent="Positions" unique_id=2111704405]
+position = Vector2(946, 346)
 
 [node name="Enemy3" type="Marker2D" parent="Positions" unique_id=1524662364]
 position = Vector2(775, 485)
+
+[node name="MovePositions" type="Node2D" parent="." unique_id=1276566164]
+
+[node name="INFEnemy1" type="Marker2D" parent="MovePositions" unique_id=770148118]
+position = Vector2(708, 248)
+
+[node name="INFEnemy2" type="Marker2D" parent="MovePositions" unique_id=1139694746]
+position = Vector2(900, 350)
+
+[node name="INFEnemy3" type="Marker2D" parent="MovePositions" unique_id=1672802770]
+position = Vector2(708, 482.67)
+
+[node name="INFAOE" type="Marker2D" parent="MovePositions" unique_id=1128713330]
+position = Vector2(670, 343)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=913120634]
 
@@ -55,6 +69,12 @@ layout_mode = 2
 
 [node name="SPLabel" type="Label" parent="CanvasLayer/BattleUI/VBoxContainer" unique_id=745328285]
 layout_mode = 2
+
+[node name="DisplayLabel" type="Label" parent="CanvasLayer/BattleUI/VBoxContainer" unique_id=1257364991]
+custom_minimum_size = Vector2(1000, 100)
+custom_maximum_size = Vector2(1000, 250)
+layout_mode = 2
+text = "BLAHBLAH"
 
 [node name="CommandPanel" type="HBoxContainer" parent="CanvasLayer/BattleUI" unique_id=1808563646]
 layout_mode = 0

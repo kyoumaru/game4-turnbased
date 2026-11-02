@@ -2,6 +2,7 @@ extends Node
 
 signal action_done
 
+
 enum State { BUSY, CHOOSING_ACTION, CHOOSING_TARGET }
 
 # --- Scene & Resource Preloads ---
@@ -17,6 +18,8 @@ const ENEMYBIG_FRAMES = preload("res://assets/sprite_animations/enemybig.tres")
 
 const MAX_SP := 7
 const START_SP := 3
+
+var current_target_index = 0
 
 # Keybinds -> actions
 var key_map := {
@@ -46,6 +49,15 @@ var pending_targets: Array[Unit] = []
 	$Positions/Enemy2,
 	$Positions/Enemy3
 ]
+
+# INF = In Front 
+@onready var move_to_enemy_spawns: Array[Marker2D] = [
+	$MovePositions/INFEnemy1, 
+	$MovePositions/INFEnemy2, 
+	$MovePositions/INFEnemy3,
+]
+
+
 
 func _ready() -> void:
 	players = [
@@ -300,10 +312,43 @@ func _select_action(action: Unit.Action) -> void:
 	pending_action = action
 	pending_targets = targets
 	state = State.CHOOSING_TARGET
-	print("Choose target:")
-	for i in targets.size():
-		print("  %d) %s (%d HP)" % [i + 1, targets[i].unit_name, targets[i].hp])
+	
+	# Wait for the player to pick a target
+	var chosen_target: Unit = await choose_target(targets)
 
+	# Execute when there is a valid target
+	if chosen_target:
+		_execute(action, [chosen_target])
+
+func choose_target(targets: Array) -> Unit:
+	if targets.is_empty():
+		return null
+
+	# Auto-target the first ally / enemy of the array
+	current_target_index = 0
+	targets[current_target_index].play_anim("target")
+
+	while true:
+		# Pause here and wait to get the valid target via ui_accept
+		await get_tree().process_frame
+
+		if Input.is_action_just_pressed("ui_down"):
+			targets[current_target_index].play_anim("idle")
+			current_target_index = (current_target_index + 1) % targets.size()
+			targets[current_target_index].play_anim("target")
+
+		elif Input.is_action_just_pressed("ui_up"):
+			targets[current_target_index].play_anim("idle")
+			current_target_index = (current_target_index - 1 + targets.size()) % targets.size()
+			targets[current_target_index].play_anim("target")
+
+		elif Input.is_action_just_pressed("ui_accept"):
+			var chosen = targets[current_target_index]
+			chosen.play_anim("idle")
+			return chosen
+			
+	# Here to make the parser not tweak out
+	return null
 
 func _execute(action: Unit.Action, targets: Array) -> void:
 	state = State.BUSY
@@ -311,6 +356,9 @@ func _execute(action: Unit.Action, targets: Array) -> void:
 	match action:
 		Unit.Action.BASIC: gain_sp(current_actor.sp_on_basic)
 		Unit.Action.SKILL: spend_sp(current_actor.skill_cost)
+
+	#Move current actor to enemy spawns
+	#current_actor.global_position = move_to_enemy_spawns[0].global_position
 	current_actor.perform(action, targets, self)
 	action_done.emit()
 
@@ -322,7 +370,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		State.CHOOSING_ACTION:
 			if key_map.has(event.keycode):
 				_select_action(key_map[event.keycode])
-		State.CHOOSING_TARGET:
-			var idx: int = event.keycode - KEY_1
-			if idx >= 0 and idx < pending_targets.size():
-				_execute(pending_action, [pending_targets[idx]])
+		# Following code turned into a comment to regulate existing targeting system
+		#State.CHOOSING_TARGET:
+			#var idx: int = event.keycode - KEY_1
+			#if idx >= 0 and idx < pending_targets.size():
+				#_execute(pending_action, [pending_targets[idx]])

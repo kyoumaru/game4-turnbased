@@ -80,7 +80,7 @@ func play_anim(anim_name: String) -> void:
 		sprite.play(anim_name)
 		
 		# Auto-return to idle after non-looping actions finish
-		if anim_name in ["attack", "skill", "hit"]:
+		if anim_name in ["attack", "skill", "ultimate", "hit"]:
 			await sprite.animation_finished
 			if hp > 0:
 				play_anim("idle")
