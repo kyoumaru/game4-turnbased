@@ -33,6 +33,7 @@ func get_target_type(action: Action) -> Target:
 
 # [S] Skill: crit dmg buff + 50% advance on 1 ally
 func skill(targets: Array, battle: Node) -> void:
+	play_anim("skill")
 	var ally: Unit = targets[0]
 	ally.add_buff("crit_dmg", SKILL_CDMG, SKILL_BUFF_TURNS)
 	battle.advance_action(ally, SKILL_ADVANCE)
@@ -40,6 +41,7 @@ func skill(targets: Array, battle: Node) -> void:
 
 # [R] Ultimate: SP + team crit dmg + 24% advance for everyone
 func ult(targets: Array, battle: Node) -> void:
+	play_anim("ultimate")
 	battle.gain_sp(ULT_SP)
 	for t in targets:
 		# Buffs tick at the end of the owner's turn. Sparkle is mid-turn right now,

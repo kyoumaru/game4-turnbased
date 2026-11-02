@@ -12,6 +12,9 @@ const HUOHUO_FRAMES = preload("res://assets/sprite_animations/huohuo.tres")
 const HIMEKO_FRAMES = preload("res://assets/sprite_animations/himeko.tres")
 const SPARKLE_FRAMES = preload("res://assets/sprite_animations/sparkle.tres")
 
+const ENEMYSMALL_FRAMES = preload("res://assets/sprite_animations/enemysmall.tres")
+const ENEMYBIG_FRAMES = preload("res://assets/sprite_animations/enemybig.tres")
+
 const MAX_SP := 7
 const START_SP := 3
 
@@ -110,10 +113,10 @@ func _add(unit_instance: Unit) -> Unit:
 		var slot = _enemy_spawn_count
 		_enemy_spawn_count += 1
 		
-		#if unit_instance is Enemy1:
-			#frames = ENEMY1_FRAMES
-		#elif unit_instance is Enemy2:
-			#frames = ENEMY2_FRAMES
+		if unit_instance is EnemySmall:
+			frames = ENEMYSMALL_FRAMES
+		elif unit_instance is EnemyBoss:
+			frames = ENEMYBIG_FRAMES
 			
 		if slot < enemy_spawns.size() and enemy_spawns[slot]:
 			u.global_position = enemy_spawns[slot].global_position

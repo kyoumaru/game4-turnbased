@@ -27,18 +27,21 @@ func get_target_type(action: Action) -> Target:
 
 # [A] Basic: 100% ATK, single target
 func basic_attack(targets: Array, battle: Node) -> void:
+	play_anim("attack")
 	var hits := deal_damage_to(targets, 1.0)
 	gain_charge(hits, battle)
 
 
 # [S] Skill: 120% ATK to all enemies
 func skill(targets: Array, battle: Node) -> void:
+	play_anim("skill")
 	var hits := deal_damage_to(targets, 1.2)
 	gain_charge(hits, battle)
 
 
 # [R] Ultimate: 220% ATK to all enemies
 func ult(targets: Array, battle: Node) -> void:
+	play_anim("ultimate")
 	var hits := deal_damage_to(targets, 2.2)
 	gain_charge(hits, battle)
 

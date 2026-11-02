@@ -28,6 +28,7 @@ func get_target_type(action: Action) -> Target:
 
 # [S] Skill: heal the 3 lowest-HP% allies
 func skill(targets: Array, _battle: Node) -> void:
+	play_anim("skill")
 	var pool: Array = targets.duplicate()
 	pool.sort_custom(func(a, b): return float(a.hp) / a.max_hp < float(b.hp) / b.max_hp)
 	for i in mini(skill_heal_count, pool.size()):
@@ -36,6 +37,7 @@ func skill(targets: Array, _battle: Node) -> void:
 
 # [R] Ultimate: heal ALL allies + give them energy
 func ult(targets: Array, _battle: Node) -> void:
+	play_anim("ultimate")
 	for t in targets:
 		t.heal(int(atk * ULT_HEAL))
 		t.gain_energy(ULT_ENERGY)

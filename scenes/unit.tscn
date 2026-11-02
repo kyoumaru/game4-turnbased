@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bmdqmw00bvsn8"]
 
 [ext_resource type="Script" uid="uid://cc5t5nce2a7hw" path="res://scripts/unit.gd" id="1_o7ajc"]
-[ext_resource type="SpriteFrames" uid="uid://5uiwof1t8ot1" path="res://assets/sprite_animations/sparkle.tres" id="2_k673f"]
+[ext_resource type="SpriteFrames" uid="uid://4luf1p0j46cn" path="res://assets/sprite_animations/enemysmall.tres" id="2_k673f"]
 
 [node name="Unit" type="Node2D" unique_id=863149578]
 script = ExtResource("1_o7ajc")
@@ -10,7 +10,7 @@ script = ExtResource("1_o7ajc")
 texture_filter = 1
 scale = Vector2(5, 5)
 sprite_frames = ExtResource("2_k673f")
-animation = &"ultimate"
+animation = &"hit"
 
 [node name="HealthBar" type="ProgressBar" parent="." unique_id=1077742454]
 offset_left = -60.0

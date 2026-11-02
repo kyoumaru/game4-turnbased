@@ -23,11 +23,13 @@ func get_target_type(_action: Action) -> Target:
 
 # [S] Skill: 200% ATK
 func skill(targets: Array, _battle: Node) -> void:
+	play_anim("skill")
 	deal_damage(targets[0], 2.0)
 
 
 # [R] Ultimate: 450% ATK
 func ult(targets: Array, _battle: Node) -> void:
+	play_anim("ultimate")
 	deal_damage(targets[0], 4.5)
 
 

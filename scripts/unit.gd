@@ -86,6 +86,7 @@ func play_anim(anim_name: String) -> void:
 				play_anim("idle")
 
 func take_damage(amount: int, source: Unit = null) -> void:
+	play_anim("hit")
 	hp = maxi(hp - amount, 0)
 	print("%s takes %d damage (%d/%d)" % [unit_name, amount, hp, max_hp])
 	if hp == 0:
@@ -183,7 +184,6 @@ func basic_attack(targets: Array, _battle: Node) -> void:
 
 
 func skill(_targets: Array, _battle: Node) -> void:
-	play_anim("skill")
 	pass
 
 

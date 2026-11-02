@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cn03p83w64qyp" path="res://scripts/battle_manager.gd" id="1_dn72j"]
 [ext_resource type="Texture2D" uid="uid://d2u2er4o0hh4f" path="res://assets/battleback1_0.png" id="2_th188"]
+[ext_resource type="Script" uid="uid://cttf1gy2iw8ds" path="res://scenes/battle_ui.gd" id="3_p1qf1"]
 
 [node name="Node" type="Node" unique_id=915763739]
 script = ExtResource("1_dn72j")
@@ -33,3 +34,50 @@ position = Vector2(771, 250)
 
 [node name="Enemy3" type="Marker2D" parent="Positions" unique_id=1524662364]
 position = Vector2(775, 485)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=913120634]
+
+[node name="BattleUI" type="Control" parent="CanvasLayer" unique_id=332219874 node_paths=PackedStringArray("battle_manager")]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1154.0
+offset_bottom = 640.0
+script = ExtResource("3_p1qf1")
+battle_manager = NodePath("../..")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/BattleUI" unique_id=897821600]
+layout_mode = 0
+offset_right = 1155.0
+offset_bottom = 651.0
+
+[node name="ActionBar" type="HBoxContainer" parent="CanvasLayer/BattleUI/VBoxContainer" unique_id=238285038]
+layout_mode = 2
+
+[node name="SPLabel" type="Label" parent="CanvasLayer/BattleUI/VBoxContainer" unique_id=745328285]
+layout_mode = 2
+
+[node name="CommandPanel" type="HBoxContainer" parent="CanvasLayer/BattleUI" unique_id=1808563646]
+layout_mode = 0
+offset_left = 645.0
+offset_top = 516.0
+offset_right = 1103.0
+offset_bottom = 616.0
+
+[node name="BtnBasic" type="Button" parent="CanvasLayer/BattleUI/CommandPanel" unique_id=182511152]
+custom_minimum_size = Vector2(150, 150)
+custom_maximum_size = Vector2(-1, 100)
+layout_mode = 2
+text = "[A] BASIC ATTACK
+"
+
+[node name="BtnSkill" type="Button" parent="CanvasLayer/BattleUI/CommandPanel" unique_id=1904121040]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "[S] SKILL
+"
+
+[node name="BtnUlt" type="Button" parent="CanvasLayer/BattleUI/CommandPanel" unique_id=1033041145]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "[R] ULTIMATE
+Energy: x/x"
