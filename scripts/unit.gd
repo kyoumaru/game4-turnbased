@@ -9,6 +9,12 @@ extends Node2D
 
 signal died(unit: Unit, killer: Unit)
 
+signal action_logged(text: String)
+
+func log_msg(text:String) -> void:
+	print(text)
+	action_logged.emit(text)
+
 enum Action { BASIC, SKILL, ULT }
 enum Target { ENEMY, ALLY, OTHER_ALLY, SELF, ALL_ENEMIES, ALL_ALLIES }
 
@@ -88,7 +94,7 @@ func play_anim(anim_name: String) -> void:
 func take_damage(amount: int, source: Unit = null) -> void:
 	play_anim("hit")
 	hp = maxi(hp - amount, 0)
-	print("%s takes %d damage (%d/%d)" % [unit_name, amount, hp, max_hp])
+	log_msg("%s takes %d damage (%d/%d)" % [unit_name, amount, hp, max_hp])
 	if hp == 0:
 		died.emit(self, source)
 	else:
@@ -97,7 +103,7 @@ func take_damage(amount: int, source: Unit = null) -> void:
 
 func heal(amount: int) -> void:
 	hp = mini(hp + amount, max_hp)
-	print("%s heals %d (%d/%d)" % [unit_name, amount, hp, max_hp])
+	log_msg("%s is healed %d (%d/%d)" % [unit_name, amount, hp, max_hp])
 
 
 # ---------- Crit + damage ----------
@@ -134,7 +140,7 @@ func deal_damage_to(targets: Array, multiplier: float) -> int:
 # ---------- Buffs ----------
 func add_buff(stat: String, amount: float, turns: int) -> void:
 	buffs.append({"stat": stat, "amount": amount, "turns": turns})
-	print("%s gains %s +%d%% for %d turn(s)" % [unit_name, stat, int(amount * 100), turns])
+	log_msg("%s gains %s +%d%% for %d turn(s)" % [unit_name, stat, int(amount * 100), turns])
 
 
 func buff_total(stat: String) -> float:
@@ -150,7 +156,7 @@ func tick_buffs() -> void:
 	for i in range(buffs.size() - 1, -1, -1):
 		buffs[i]["turns"] -= 1
 		if buffs[i]["turns"] <= 0:
-			print("%s's %s buff wore off" % [unit_name, buffs[i]["stat"]])
+			log_msg("%s's %s buff wore off" % [unit_name, buffs[i]["stat"]])
 			buffs.remove_at(i)
 
 
@@ -206,14 +212,14 @@ func take_turn(_battle: Node) -> void:
 func perform(action: Action, targets: Array, battle: Node) -> void:
 	match action:
 		Action.BASIC:
-			print("%s uses Basic Attack" % unit_name)
+			log_msg("%s uses Basic Attack" % unit_name)
 			basic_attack(targets, battle)
 			gain_energy(energy_on_basic)
 		Action.SKILL:
-			print("%s uses Skill" % unit_name)
+			log_msg("%s uses Skill" % unit_name)
 			skill(targets, battle)
 			gain_energy(energy_on_skill)
 		Action.ULT:
-			print("%s uses ULTIMATE!" % unit_name)
+			log_msg("%s uses ULTIMATE!" % unit_name)
 			energy = 0
 			ult(targets, battle)

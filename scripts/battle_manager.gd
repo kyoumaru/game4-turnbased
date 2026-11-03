@@ -2,6 +2,8 @@ extends Node
 
 signal action_done
 
+signal action_logged(text: String)
+
 
 enum State { BUSY, CHOOSING_ACTION, CHOOSING_TARGET }
 
@@ -84,6 +86,8 @@ func _add(unit_instance: Unit) -> Unit:
 	# Instance the visual unit.tscn scene (which contains the Sprite, HealthBar, and Label)
 	var u: Unit = UNIT_VIEW_SCENE.instantiate()
 	
+	u.action_logged.connect(func(msg: String): action_logged.emit(msg))
+	
 	# 2. Copy base stats over from the character instance
 	u.unit_name = unit_instance.unit_name
 	u.max_hp = unit_instance.max_hp
@@ -160,7 +164,8 @@ func spend_sp(amount: int) -> void:
 # percent: 0.3 = 30%, 1.0 = 100% (acts next)
 func advance_action(unit: Unit, percent: float) -> void:
 	unit.av = maxf(unit.av - unit.base_av() * percent, 0.0)
-	print("%s advanced %d%%" % [unit.unit_name, int(percent * 100)])
+	var msg := ("%s advanced %d%%" % [unit.unit_name, int(percent * 100)])
+	action_logged.emit(msg)
 
 
 func delay_action(unit: Unit, percent: float) -> void:
@@ -218,10 +223,12 @@ func _print_status() -> void:
 func run_battle() -> void:
 	while true:
 		if _alive(players).is_empty():
-			print("DEFEAT")
+			var msg := ("DEFEAT")
+			action_logged.emit(msg)
 			return
 		if _alive(enemies).is_empty():
-			print("VICTORY")
+			var msg := ("VICTORY")
+			action_logged.emit(msg)
 			return
 
 		var all := _alive(players) + _alive(enemies)
@@ -235,12 +242,19 @@ func run_battle() -> void:
 
 		current_actor = actor
 		print("\n=== %s's turn === (next: %s)" % [actor.unit_name, ", ".join(preview_order(6))])
+		
 		if actor.is_player:
 			await player_turn(actor)
 		else:
 			actor.take_turn(self)
 		actor.tick_buffs()
-		await get_tree().create_timer(0.6).timeout
+		await get_tree().create_timer(0.75).timeout
+		
+		#Reset display label per turn
+		var msg := ("...")
+		action_logged.emit(msg)
+
+		
 
 
 # Simulated turn order (use for a turn-order bar later)
@@ -296,10 +310,13 @@ func _is_multi_target(actor: Unit, action: Unit.Action) -> bool:
 
 func _select_action(action: Unit.Action) -> void:
 	if action == Unit.Action.SKILL and sp < current_actor.skill_cost:
-		print("Not enough skill points! (%d/%d)" % [sp, MAX_SP])
+		#var msg := ("Not enough skill points! (%d/%d)" % [sp, MAX_SP])
+		var msg := ("Not enough skill points!")
+		action_logged.emit(msg)
 		return
 	if not current_actor.can_use(action):
-		print("Not enough energy! (%d/%d)" % [current_actor.energy, current_actor.max_energy])
+		var msg := ("Not enough energy! (%d/%d)" % [current_actor.energy, current_actor.max_energy])
+		action_logged.emit(msg)
 		return
 	var targets := _valid_targets(current_actor, action)
 	if targets.is_empty():

@@ -74,7 +74,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(1000, 100)
 custom_maximum_size = Vector2(1000, 250)
 layout_mode = 2
-text = "BLAHBLAH"
+text = "Take action!"
 
 [node name="CommandPanel" type="HBoxContainer" parent="CanvasLayer/BattleUI" unique_id=1808563646]
 layout_mode = 0

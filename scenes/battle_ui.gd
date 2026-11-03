@@ -12,6 +12,10 @@ extends Control
 @onready var btn_ult: Button = $CommandPanel/BtnUlt
 
 func _ready() -> void:
+	
+	# Connect with battle manager to collect UI messages for display
+	battle_manager.action_logged.connect(_on_action_logged)
+	
 	# If battle_manager isn't exported, try finding it in the parent/root scene	
 	if not battle_manager:
 		battle_manager = get_node_or_null("../BattleManager") # Adjust path if needed
@@ -29,7 +33,10 @@ func _ready() -> void:
 
 func _on_action_logged(text: String) -> void:
 	if display_label:
-		display_label.text = text
+		if display_label.text.contains("..."):
+			display_label.text = text 
+		else:
+			display_label.text += "\n" + text
 
 func _process(_delta: float) -> void:
 	if not battle_manager:
