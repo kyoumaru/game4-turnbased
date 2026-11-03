@@ -3,6 +3,20 @@
 [ext_resource type="Script" uid="uid://cc5t5nce2a7hw" path="res://scripts/unit.gd" id="1_o7ajc"]
 [ext_resource type="SpriteFrames" uid="uid://4luf1p0j46cn" path="res://assets/sprite_animations/enemysmall.tres" id="2_k673f"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBox_toughness_background"]
+bg_color = Color(0.12, 0.12, 0.16, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_left = 2
+corner_radius_bottom_right = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_toughness_fill"]
+bg_color = Color(0.92, 0.94, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_left = 2
+corner_radius_bottom_right = 2
+
 [node name="Unit" type="Node2D" unique_id=863149578]
 script = ExtResource("1_o7ajc")
 
@@ -23,3 +37,27 @@ offset_left = -19.0
 offset_top = -119.0
 offset_right = 21.0
 offset_bottom = -96.0
+
+[node name="ToughnessBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = -60.0
+offset_top = -59.0
+offset_right = 58.0
+offset_bottom = -51.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBox_toughness_background")
+theme_override_styles/fill = SubResource("StyleBox_toughness_fill")
+show_percentage = false
+
+[node name="WeaknessLabel" type="Label" parent="."]
+visible = false
+offset_left = -115.0
+offset_top = -157.0
+offset_right = 115.0
+offset_bottom = -123.0
+mouse_filter = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1

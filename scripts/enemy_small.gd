@@ -8,6 +8,8 @@ func _init(spd := 99) -> void:
 	super()
 	unit_name = "Small"
 	max_hp = 200
+	max_toughness = 90
+	weaknesses = [Element.FIRE, Element.WIND]
 	atk = 12
 	speed = spd
 	attacks = [atk_1]

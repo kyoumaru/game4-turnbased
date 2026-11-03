@@ -17,6 +17,7 @@ const ENEMYBIG_FRAMES = preload("res://assets/sprite_animations/enemybig.tres")
 
 const MAX_SP := 7
 const START_SP := 3
+const BREAK_ACTION_DELAY := 0.25
 
 # Keybinds -> actions
 var key_map := {
@@ -32,6 +33,7 @@ var state := State.BUSY
 var current_actor: Unit
 var pending_action: Unit.Action
 var pending_targets: Array[Unit] = []
+var _pending_breaks: Array[Dictionary] = []
 
 # --- Marker References from BattleScene.tscn ---
 @onready var player_spawns: Array[Marker2D] = [
@@ -62,6 +64,7 @@ func _ready() -> void:
 	# Enemies have no names for now, just numbers
 	for i in enemies.size():
 		enemies[i].unit_name = "Enemy%d" % (i + 1)
+		enemies[i].name_label.text = enemies[i].unit_name
 	run_battle()
 
 # Internal counters to track spawn slots automatically
@@ -86,8 +89,15 @@ func _add(unit_instance: Unit) -> Unit:
 	if script_path:
 		u.set_script(script_path)
 		
+	# Copy break configuration after attaching the character script, before _ready.
+	u.element = unit_instance.element
+	u.max_toughness = unit_instance.max_toughness
+	u.weaknesses = unit_instance.weaknesses.duplicate()
+	u.break_charge_value = unit_instance.break_charge_value
+
 	# Connect signals and add to the scene tree
 	u.died.connect(_on_unit_died)
+	u.weakness_broken.connect(_on_weakness_broken)
 	add_child(u)
 	
 	var frames: SpriteFrames = null
@@ -129,7 +139,8 @@ func _add(unit_instance: Unit) -> Unit:
 	if u.sprite and frames:
 		u.sprite.sprite_frames = frames
 		u.play_anim("idle")
-		
+
+	unit_instance.free()
 	return u
 
 
@@ -191,6 +202,26 @@ func _on_unit_died(victim: Unit, killer: Unit) -> void:
 		killer.on_kill(victim, self)
 
 
+func _on_weakness_broken(victim: Unit, breaker: Unit) -> void:
+	print("*** %s's weakness is broken by %s! ***" % [victim.unit_name, breaker.unit_name])
+	if victim.is_alive():
+		delay_action(victim, BREAK_ACTION_DELAY)
+	_pending_breaks.append({"victim": victim, "breaker": breaker})
+
+
+func _resolve_breaks() -> void:
+	# Finish the current attack before firing passives. A follow-up can create
+	# more breaks, which are processed on the next batch.
+	while not _pending_breaks.is_empty():
+		var events := _pending_breaks.duplicate()
+		_pending_breaks.clear()
+		for event in events:
+			for ally in allies_of(event["breaker"]):
+				ally.on_enemy_broken(event["victim"], self)
+		for ally in _alive(players):
+			ally.resolve_follow_up(self)
+
+
 func _print_status() -> void:
 	print("-- Party --   SP %d/%d" % [sp, MAX_SP])
 	for u in _alive(players):
@@ -199,7 +230,9 @@ func _print_status() -> void:
 			int(u.get_crit_rate() * 100), int(u.get_crit_dmg() * 100)])
 	print("-- Enemies --")
 	for u in _alive(enemies):
-		print("  %s  HP %d/%d" % [u.unit_name, u.hp, u.max_hp])
+		print("  %s  HP %d/%d  Toughness %d/%d  Weak: %s%s" % [
+			u.unit_name, u.hp, u.max_hp, u.toughness, u.max_toughness,
+			u.weakness_names(), " [BREAK]" if u.is_weakness_broken() else ""])
 
 
 # ---------- Main loop ----------
@@ -226,6 +259,7 @@ func run_battle() -> void:
 		if actor.is_player:
 			await player_turn(actor)
 		else:
+			actor.recover_toughness()
 			actor.take_turn(self)
 		actor.tick_buffs()
 		await get_tree().create_timer(0.6).timeout
@@ -253,6 +287,7 @@ func preview_order(count := 6) -> Array[String]:
 # ---------- Player input ----------
 func player_turn(actor: Unit) -> void:
 	_print_status()
+	print("%s deals %s damage" % [actor.unit_name, actor.element_name()])
 	var skill_txt := "[S] Skill (-%d SP)%s" % [actor.skill_cost, "" if sp >= actor.skill_cost else " (no SP)"]
 	var ult_txt := "[R] Ultimate%s" % ("" if actor.can_use(Unit.Action.ULT) else " (not ready)")
 	print("[A] Basic (+%d SP)  %s  %s" % [actor.sp_on_basic, skill_txt, ult_txt])
@@ -300,7 +335,7 @@ func _select_action(action: Unit.Action) -> void:
 	pending_action = action
 	pending_targets = targets
 	state = State.CHOOSING_TARGET
-	print("Choose target:")
+	print("Choose target (%s damage):" % current_actor.element_name())
 	for i in targets.size():
 		print("  %d) %s (%d HP)" % [i + 1, targets[i].unit_name, targets[i].hp])
 
@@ -312,6 +347,7 @@ func _execute(action: Unit.Action, targets: Array) -> void:
 		Unit.Action.BASIC: gain_sp(current_actor.sp_on_basic)
 		Unit.Action.SKILL: spend_sp(current_actor.skill_cost)
 	current_actor.perform(action, targets, self)
+	_resolve_breaks()
 	action_done.emit()
 
 

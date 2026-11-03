@@ -39,6 +39,7 @@ func _process(_delta: float) -> void:
 		
 		# Disable skill/ult buttons if conditions aren't met
 		var unit = battle_manager.current_actor
+		btn_basic.text = "[A] BASIC ATTACK\n%s" % unit.element_name()
 		btn_skill.disabled = battle_manager.sp < unit.skill_cost
 		btn_ult.disabled = not unit.can_use(Unit.Action.ULT)
 		

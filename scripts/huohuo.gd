@@ -12,6 +12,7 @@ const ULT_ENERGY := 30
 func _init() -> void:
 	super()
 	unit_name = "Huohuo"
+	element = Element.WIND
 	max_hp = 140
 	atk = 15
 	speed = 110

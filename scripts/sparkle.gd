@@ -18,6 +18,7 @@ const ULT_ADVANCE := 0.24       # 24% action advance for everyone
 func _init() -> void:
 	super()
 	unit_name = "Sparkle"
+	element = Element.QUANTUM
 	max_hp = 110
 	atk = 18
 	speed = 120   # fastest

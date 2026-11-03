@@ -5,12 +5,20 @@ extends Node2D
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D # Change path if your sprite node is nested differently
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var name_label: Label = $NameLabel
+@onready var toughness_bar: ProgressBar = $ToughnessBar
+@onready var weakness_label: Label = $WeaknessLabel
 
 
 signal died(unit: Unit, killer: Unit)
+signal weakness_broken(unit: Unit, breaker: Unit)
 
 enum Action { BASIC, SKILL, ULT }
 enum Target { ENEMY, ALLY, OTHER_ALLY, SELF, ALL_ENEMIES, ALL_ALLIES }
+enum Element { PHYSICAL, FIRE, ICE, LIGHTNING, WIND, QUANTUM, IMAGINARY }
+
+const BASIC_TOUGHNESS_DAMAGE := 30
+# Based on HSR's broken dmg multiplier
+const BROKEN_DAMAGE_MULTIPLIER := 1.0 / 0.9
 
 var unit_name := "Unit"
 var max_hp := 100
@@ -23,6 +31,16 @@ var atk := 20
 var speed := 100
 var is_player := true
 var av := 0.0
+
+# Only enemies have toughness in this implementation; playable chars keep default 0.
+var element := Element.PHYSICAL
+var weaknesses: Array[Element] = []
+var max_toughness := 0
+var toughness := 0:
+	set(value):
+		toughness = clampi(value, 0, max_toughness)
+		_update_toughness_display()
+var break_charge_value := 1   # Himeko gains 3 for a boss, 1 for a small enemy.
 
 # ---------- Crit (base values, change per character in its _init) ----------
 var crit_rate := 0.5   # 50% chance
@@ -52,6 +70,7 @@ func _ready() -> void:
 	hp = max_hp
 	energy = 0
 	reset_av()
+	toughness = max_toughness
 	
 	if name_label:
 		name_label.text = unit_name
@@ -73,6 +92,53 @@ func reset_av() -> void:
 
 func is_alive() -> bool:
 	return hp > 0
+
+# ---------- Weakness Break ----------
+func is_weakness_broken() -> bool:
+	return max_toughness > 0 and toughness == 0
+
+
+func element_name() -> String:
+	return Element.keys()[element].capitalize()
+
+
+func weakness_names() -> String:
+	var names := PackedStringArray()
+	for weakness in weaknesses:
+		names.append(Element.keys()[weakness].capitalize())
+	return " / ".join(names)
+
+
+func _update_toughness_display() -> void:
+	var show_toughness := not is_player and max_toughness > 0
+	if toughness_bar:
+		toughness_bar.visible = show_toughness
+		toughness_bar.max_value = max_toughness
+		toughness_bar.value = toughness
+	if weakness_label:
+		weakness_label.visible = show_toughness
+		var status := "BREAK" if is_weakness_broken() else "%d/%d toughness" % [toughness, max_toughness]
+		weakness_label.text = "Weak: %s\n%s" % [weakness_names(), status]
+		weakness_label.modulate = Color.GOLD if is_weakness_broken() else Color.WHITE
+
+
+# Called by deal_damage while the target is alive. Report the transition only;
+# the break signal is emitted after that hit's HP damage has also resolved.
+func _reduce_toughness(amount: int, source: Unit) -> bool:
+	if is_player or max_toughness <= 0 or is_weakness_broken() or amount <= 0:
+		return false
+	if not is_alive() or not source.is_player or not weaknesses.has(source.element):
+		return false
+	toughness -= amount
+	return is_weakness_broken()
+
+
+func recover_toughness() -> void:
+	if not is_alive() or not is_weakness_broken():
+		return
+	toughness = max_toughness
+	print("%s recovers toughness (%d/%d)" % [unit_name, toughness, max_toughness])
+
 
 # ---------- Visual Animation Helper ----------
 func play_anim(anim_name: String) -> void:
@@ -111,22 +177,30 @@ func get_crit_dmg() -> float:
 
 # Deals (ATK x multiplier) damage to one target, rolling a crit.
 # Returns false if the target was already dead (so nothing happened).
-func deal_damage(target: Unit, multiplier: float) -> bool:
+func deal_damage(target: Unit, multiplier: float, toughness_damage := 0) -> bool:
 	if not target.is_alive():
 		return false
 	var dmg := float(atk) * multiplier
 	if randf() < get_crit_rate():
 		dmg *= 1.0 + get_crit_dmg()
 		print("CRIT! (x%.2f)" % (1.0 + get_crit_dmg()))
+	# The breaking hit itself deals normal damage
+	# Toughness reduced to 0 only after the breaking hit
+	# Only following hits receive the broken-state bonus
+	if target.is_weakness_broken():
+		dmg *= BROKEN_DAMAGE_MULTIPLIER
+	var broke := target._reduce_toughness(toughness_damage, self)
 	target.take_damage(int(dmg), self)
+	if broke:
+		target.weakness_broken.emit(target, self)
 	return true
 
 
 # Hits every unit in `targets`. Returns how many were actually hit.
-func deal_damage_to(targets: Array, multiplier: float) -> int:
+func deal_damage_to(targets: Array, multiplier: float, toughness_damage := 0) -> int:
 	var hits := 0
 	for t in targets:
-		if deal_damage(t, multiplier):
+		if deal_damage(t, multiplier, toughness_damage):
 			hits += 1
 	return hits
 
@@ -180,7 +254,7 @@ func get_target_type(_action: Action) -> Target:
 # Default basic attack: 100% ATK to one target
 func basic_attack(targets: Array, _battle: Node) -> void:
 	play_anim("attack")
-	deal_damage(targets[0], 1.0)
+	deal_damage(targets[0], 1.0, BASIC_TOUGHNESS_DAMAGE)
 
 
 func skill(_targets: Array, _battle: Node) -> void:
@@ -193,6 +267,14 @@ func ult(_targets: Array, _battle: Node) -> void:
 
 # Passive hook: called when this unit kills something
 func on_kill(_victim: Unit, _battle: Node) -> void:
+	pass
+
+# This does nothing; may be overidden by a specific character
+func on_enemy_broken(_enemy: Unit, _battle: Node) -> void:
+	pass
+
+# This does nothing; may be overidden by a specific character
+func resolve_follow_up(_battle: Node) -> void:
 	pass
 
 

@@ -10,6 +10,9 @@ func _init() -> void:
 	super()
 	unit_name = "Boss"
 	max_hp = 600
+	max_toughness = 180
+	weaknesses = [Element.FIRE, Element.QUANTUM]
+	break_charge_value = 3
 	atk = 18
 	speed = 115
 

@@ -7,6 +7,9 @@ extends Player
 
 const CHARGES_NEEDED := 3
 const FOLLOW_UP_MULT := 1.2
+const SKILL_TOUGHNESS_DAMAGE := 60
+const ULT_TOUGHNESS_DAMAGE := 60
+const FOLLOW_UP_TOUGHNESS_DAMAGE := 30
 
 var charges := 0
 
@@ -14,6 +17,7 @@ var charges := 0
 func _init() -> void:
 	super()
 	unit_name = "Himeko"
+	element = Element.FIRE
 	max_hp = 130
 	atk = 24
 	speed = 100   # second slowest
@@ -26,43 +30,42 @@ func get_target_type(action: Action) -> Target:
 
 
 # [A] Basic: 100% ATK, single target
-func basic_attack(targets: Array, battle: Node) -> void:
+func basic_attack(targets: Array, _battle: Node) -> void:
 	play_anim("attack")
-	var hits := deal_damage_to(targets, 1.0)
-	gain_charge(hits, battle)
+	deal_damage_to(targets, 1.0, BASIC_TOUGHNESS_DAMAGE)
 
 
 # [S] Skill: 120% ATK to all enemies
-func skill(targets: Array, battle: Node) -> void:
+func skill(targets: Array, _battle: Node) -> void:
 	play_anim("skill")
-	var hits := deal_damage_to(targets, 1.2)
-	gain_charge(hits, battle)
+	deal_damage_to(targets, 1.2, SKILL_TOUGHNESS_DAMAGE)
 
 
 # [R] Ultimate: 220% ATK to all enemies
-func ult(targets: Array, battle: Node) -> void:
+func ult(targets: Array, _battle: Node) -> void:
 	play_anim("ultimate")
-	var hits := deal_damage_to(targets, 2.2)
-	gain_charge(hits, battle)
+	deal_damage_to(targets, 2.2, ULT_TOUGHNESS_DAMAGE)
 
 
-func gain_charge(amount: int, battle: Node) -> void:
+func gain_charge(amount: int) -> void:
 	if amount <= 0:
 		return
-	charges += amount
-	print("%s charges: %d/%d" % [unit_name, mini(charges, CHARGES_NEEDED), CHARGES_NEEDED])
-	while charges >= CHARGES_NEEDED and not battle.opponents_of(self).is_empty():
-		charges -= CHARGES_NEEDED
-		follow_up(battle)
+	charges = mini(charges + amount, CHARGES_NEEDED)
+	print("%s charges: %d/%d" % [unit_name, charges, CHARGES_NEEDED])
 
 
-# Follow-up: 120% ATK to all enemies (does NOT give charges, so it can't chain itself)
+func resolve_follow_up(battle: Node) -> void:
+	if not is_alive() or charges < CHARGES_NEEDED or battle.opponents_of(self).is_empty():
+		return
+	charges = 0
+	follow_up(battle)
+
+
+# Follow-up: 120% ATK to all enemies. Only a new break can generate more charges.
 func follow_up(battle: Node) -> void:
 	print("%s uses FOLLOW-UP!" % unit_name)
-	deal_damage_to(battle.opponents_of(self), FOLLOW_UP_MULT)
+	deal_damage_to(battle.opponents_of(self), FOLLOW_UP_MULT, FOLLOW_UP_TOUGHNESS_DAMAGE)
 
 
-# When break is coded, call this from the battle manager when Himeko breaks
-# an enemy, and remove the gain_charge(hits) calls above.
-func on_enemy_broken(_enemy: Unit, battle: Node) -> void:
-	gain_charge(1, battle)
+func on_enemy_broken(enemy: Unit, _battle: Node) -> void:
+	gain_charge(enemy.break_charge_value)
